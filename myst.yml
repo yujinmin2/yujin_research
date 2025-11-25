@@ -77,8 +77,9 @@ project:
 site:
   title: "Yujin Research Lab"
   template: book-theme
+  base_url: /yujin_research
   options:
     logo_text: "Yujin Research"
   actions:
     - title: "GitHub"
-      url: https://github.com/yujin/yujin_research
+      url: https://github.com/yujinmin2/yujin_research
