@@ -79,7 +79,7 @@ jobs:
       - name: 📦 Install dependencies
         run: |
           pip install --upgrade pip
-          pip install notion-client pyyaml
+          pip install notion-client==1.0.0 pyyaml
       
       - name: 🔄 Sync Notion content
         if: |

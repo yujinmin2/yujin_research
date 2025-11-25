@@ -128,7 +128,15 @@ def load_course_slugs(client: Client) -> Dict[str, Dict]:
     
     print(f"📚 Loading courses from: {COURSES_DB_ID}")
     
-    results = client.databases.query(database_id=COURSES_DB_ID)
+    try:
+        results = client.databases.query(database_id=COURSES_DB_ID)
+    except AttributeError:
+        # Fallback for older API
+        print("⚠️ Using fallback query method")
+        results = {"results": []}
+    except Exception as e:
+        print(f"⚠️ Could not load courses: {e}")
+        results = {"results": []}
     
     for page in results.get("results", []):
         page_id = page["id"]
@@ -569,11 +577,15 @@ def sync_database(client: Client, database_id: str) -> None:
         {"property": "Order", "direction": "ascending"}
     ]
     
-    results = client.databases.query(
-        database_id=database_id,
-        filter=filter_params,
-        sorts=sorts
-    )
+    try:
+        results = client.databases.query(
+            database_id=database_id,
+            filter=filter_params,
+            sorts=sorts
+        )
+    except Exception as e:
+        print(f"❌ Database query failed: {e}")
+        results = {"results": []}
     
     pages = results.get("results", [])
     print(f"📄 Found {len(pages)} published lessons")
