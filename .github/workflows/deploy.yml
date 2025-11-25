@@ -143,22 +143,21 @@ jobs:
         if: github.event_name != 'pull_request'
         run: git pull origin ${{ github.ref_name }} || true
       
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          node-version: '20'
       
-      - name: 📦 Install dependencies
+      - name: 📦 Install MyST
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          npm install -g mystmd
       
       - name: 🔨 Build Jupyter Book
         run: |
-          echo "📚 Building Jupyter Book..."
-          jupyter-book build . --warningiserror --keep-going || jupyter-book build .
+          echo "📚 Building with MyST..."
+          myst build --html
           echo "✅ Build completed!"
+          ls -la _build/ || echo "No _build directory"
       
       - name: 📊 Build summary
         run: |
@@ -166,12 +165,12 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Python | ${{ env.PYTHON_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node | 20 |" >> $GITHUB_STEP_SUMMARY
           echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
           
           # 페이지 수 카운트
-          PAGE_COUNT=$(find _build/html -name "*.html" | wc -l)
+          PAGE_COUNT=$(find _build/html -name "*.html" 2>/dev/null | wc -l || echo "0")
           echo "| Pages | $PAGE_COUNT |" >> $GITHUB_STEP_SUMMARY
       
       - name: 📤 Upload build artifact
