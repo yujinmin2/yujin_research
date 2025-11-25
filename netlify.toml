@@ -1,0 +1,72 @@
+# ============================================================
+# Netlify 배포 설정
+# ============================================================
+# 
+# 사용법:
+#   1. Netlify에 GitHub 리포지토리 연결
+#   2. 빌드 설정이 자동으로 이 파일에서 로드됨
+#
+# ============================================================
+
+[build]
+  # 빌드 명령어
+  command = "pip install -r requirements.txt && npm install -g mystmd && myst build --html"
+  
+  # 배포할 디렉토리
+  publish = "_build/html"
+
+[build.environment]
+  # Python 버전
+  PYTHON_VERSION = "3.11"
+  
+  # Node 버전
+  NODE_VERSION = "20"
+
+# 리다이렉트 규칙
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = {Role = ["admin"]}
+
+# 404 페이지
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+# 헤더 설정
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# 정적 자산 캐싱
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# 개발 서버 설정
+[dev]
+  command = "myst start"
+  port = 3000
+  targetPort = 3000
+  autoLaunch = true
+
+# 플러그인 (선택)
+# [[plugins]]
+#   package = "@netlify/plugin-lighthouse"

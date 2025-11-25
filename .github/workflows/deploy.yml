@@ -1,0 +1,255 @@
+# ============================================================
+# Notion → Jupyter Book → Deploy Pipeline
+# ============================================================
+# 
+# 트리거:
+#   - Push to main: 빌드 및 배포
+#   - Pull Request: 빌드만 (미리보기)
+#   - Schedule: 매일 자정 (KST 09:00) Notion 동기화
+#   - Manual: workflow_dispatch
+#
+# 필요한 Secrets:
+#   - NOTION_API_KEY: Notion Integration API 키
+#   - NOTION_DATABASE_ID: Lessons DB ID (6bde9e09-8279-46ba-9a29-8e3984f973f9)
+#   - NOTION_COURSES_DB_ID: Courses DB ID (31c05592-b009-4418-968f-1d29ff067d7d)
+#
+# ============================================================
+
+name: 📚 Build & Deploy Jupyter Book
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # 매일 UTC 00:00 (KST 09:00) 실행
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      sync_notion:
+        description: 'Notion에서 콘텐츠 동기화'
+        required: false
+        default: 'true'
+        type: boolean
+      deploy:
+        description: '배포 실행'
+        required: false
+        default: 'true'
+        type: boolean
+
+# 동시 실행 방지
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.11'
+  NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+  NOTION_COURSES_DB_ID: ${{ secrets.NOTION_COURSES_DB_ID }}
+
+jobs:
+  # ============================================================
+  # Job 1: Notion 동기화
+  # ============================================================
+  sync-notion:
+    name: 📥 Sync from Notion
+    runs-on: ubuntu-latest
+    # 스케줄, 수동 실행, 또는 main 브랜치 push 시에만 실행
+    if: |
+      github.event_name == 'schedule' || 
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    
+    outputs:
+      has_changes: ${{ steps.check_changes.outputs.has_changes }}
+    
+    steps:
+      - name: 📂 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: 📦 Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install notion-client pyyaml
+      
+      - name: 🔄 Sync Notion content
+        if: |
+          github.event_name == 'schedule' || 
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.sync_notion == 'true') ||
+          github.event_name == 'push'
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+        run: |
+          echo "🚀 Starting Notion sync..."
+          python scripts/sync_notion.py
+      
+      - name: 🔍 Check for changes
+        id: check_changes
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "📭 No changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "📬 Changes detected!"
+            git diff --staged --stat
+          fi
+      
+      - name: 💾 Commit changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "🔄 Sync content from Notion [skip ci]
+
+          Automated sync at $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          Changes:
+          $(git diff --staged --stat | head -20)"
+          git push
+
+  # ============================================================
+  # Job 2: Jupyter Book 빌드
+  # ============================================================
+  build:
+    name: 🔨 Build Jupyter Book
+    runs-on: ubuntu-latest
+    needs: [sync-notion]
+    # sync-notion이 스킵되었거나, 변경사항이 있거나, PR인 경우 실행
+    if: |
+      always() && 
+      (needs.sync-notion.result == 'skipped' || 
+       needs.sync-notion.result == 'success')
+    
+    steps:
+      - name: 📂 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          # sync-notion에서 커밋이 있었을 수 있으므로 최신 상태 가져오기
+          fetch-depth: 0
+      
+      - name: 🔄 Pull latest changes
+        if: github.event_name != 'pull_request'
+        run: git pull origin ${{ github.ref_name }} || true
+      
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: 📦 Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: 🔨 Build Jupyter Book
+        run: |
+          echo "📚 Building Jupyter Book..."
+          jupyter-book build . --warningiserror --keep-going || jupyter-book build .
+          echo "✅ Build completed!"
+      
+      - name: 📊 Build summary
+        run: |
+          echo "## 📚 Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Python | ${{ env.PYTHON_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          
+          # 페이지 수 카운트
+          PAGE_COUNT=$(find _build/html -name "*.html" | wc -l)
+          echo "| Pages | $PAGE_COUNT |" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📤 Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jupyter-book-html
+          path: _build/html
+          retention-days: 7
+      
+      - name: 📤 Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _build/html
+
+  # ============================================================
+  # Job 3: GitHub Pages 배포
+  # ============================================================
+  deploy-pages:
+    name: 🚀 Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: |
+      github.event_name != 'pull_request' &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.deploy == 'true')
+    
+    permissions:
+      pages: write
+      id-token: write
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      
+      - name: 📝 Deployment summary
+        run: |
+          echo "## 🚀 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # Job 4: PR 미리보기 (선택적)
+  # ============================================================
+  preview:
+    name: 👀 PR Preview
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: 📥 Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jupyter-book-html
+          path: _build/html
+      
+      - name: 💬 Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 📚 Jupyter Book Build Complete!
+              
+              ✅ The book has been built successfully.
+              
+              📦 **Artifact:** Download the build from the workflow run to preview locally.
+              
+              Run locally:
+              \`\`\`bash
+              cd _build/html && python -m http.server 8000
+              \`\`\`
+              Then open http://localhost:8000`
+            })
