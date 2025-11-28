@@ -153,11 +153,15 @@ jobs:
           npm install -g mystmd
       
       - name: 🔨 Build Jupyter Book
+        env:
+          BASE_URL: /yujin_research/
         run: |
           echo "📚 Building with MyST..."
-          myst build --html
+          myst build --html --ci
           echo "✅ Build completed!"
           ls -la _build/ || echo "No _build directory"
+          # .nojekyll 파일 추가
+          touch _build/html/.nojekyll
       
       - name: 📊 Build summary
         run: |
