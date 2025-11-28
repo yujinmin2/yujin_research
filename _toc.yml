@@ -1,0 +1,33 @@
+format: jb-book
+root: index
+parts:
+  - caption: "🧠 BCI 기초"
+    chapters:
+      - file: courses/bci-basics/intro
+      - file: courses/bci-basics/week1/day1-intro-neurobiology
+      - file: courses/bci-basics/week1/day2-neural-anatomy
+      - file: courses/bci-basics/week2/day1-neural-encoding
+      - file: courses/bci-basics/week2/day2-spike-trains
+      - file: courses/bci-basics/week3/day1-neural-decoding
+      - file: courses/bci-basics/week3/day2-bci-applications
+      - file: courses/bci-basics/week4/day1-information-theory
+      - file: courses/bci-basics/week4/day2-neural-coding
+      - file: courses/bci-basics/week5/day1-hodgkin-huxley
+      - file: courses/bci-basics/week5/day2-neuron-models
+      - file: courses/bci-basics/week6/day1-synaptic-models
+      - file: courses/bci-basics/week6/day2-network-models
+      - file: courses/bci-basics/week7/day1-supervised-learning
+      - file: courses/bci-basics/week7/day2-reinforcement-learning
+      - file: courses/bci-basics/week8/day1-bci-systems
+      - file: courses/bci-basics/week8/day2-future-directions
+  - caption: "📚 자료실"
+    chapters:
+      - file: resources/datasets
+      - file: resources/papers
+      - file: resources/tools
+  - caption: "💼 프로젝트"
+    chapters:
+      - file: projects/index
+  - caption: "👤 About"
+    chapters:
+      - file: about

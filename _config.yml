@@ -1,0 +1,19 @@
+title: "Yujin Research Lab"
+author: "Yujin"
+logo: ""
+
+execute:
+  execute_notebooks: 'off'
+
+repository:
+  url: https://github.com/yujinmin2/yujin_research
+  branch: main
+
+html:
+  use_repository_button: true
+  use_issues_button: true
+  baseurl: /yujin_research/
+
+sphinx:
+  config:
+    html_baseurl: https://yujinmin2.github.io/yujin_research/

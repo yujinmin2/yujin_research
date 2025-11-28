@@ -143,25 +143,22 @@ jobs:
         if: github.event_name != 'pull_request'
         run: git pull origin ${{ github.ref_name }} || true
       
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
         with:
-          node-version: '20'
+          python-version: '3.11'
+          cache: 'pip'
       
-      - name: 📦 Install MyST
+      - name: 📦 Install Jupyter Book
         run: |
-          npm install -g mystmd
+          pip install jupyter-book
       
       - name: 🔨 Build Jupyter Book
-        env:
-          BASE_URL: /yujin_research/
         run: |
-          echo "📚 Building with MyST..."
-          myst build --html --ci
+          echo "📚 Building with Jupyter Book..."
+          jupyter-book build . --path-output _build
           echo "✅ Build completed!"
-          ls -la _build/ || echo "No _build directory"
-          # .nojekyll 파일 추가
-          touch _build/html/.nojekyll
+          ls -la _build/html/ || echo "No _build/html directory"
       
       - name: 📊 Build summary
         run: |
