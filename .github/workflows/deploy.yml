@@ -23,8 +23,8 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # 매일 UTC 00:00 (KST 09:00) 실행
-    - cron: "0 */6 * * *" # Runs every 6 hours
+    # 6시간마다 실행 (UTC 0, 6, 12, 18시 = KST 9, 15, 21, 03시)
+    - cron: '0 */6 * * *'
   workflow_dispatch:
     inputs:
       sync_notion:
