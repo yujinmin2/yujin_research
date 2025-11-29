@@ -151,11 +151,13 @@ jobs:
       
       - name: 📦 Install Jupyter Book
         run: |
-          pip install jupyter-book
+          pip install "jupyter-book<1.0.0"
       
       - name: 🔨 Build Jupyter Book
         run: |
           echo "📚 Building with Jupyter Book..."
+          # myst.yml 백업 파일 삭제 (충돌 방지)
+          rm -f myst.yml.bak myst.yml
           jupyter-book build .
           echo "✅ Build completed!"
           ls -la _build/html/ || echo "No _build/html directory"
