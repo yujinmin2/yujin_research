@@ -156,7 +156,7 @@ jobs:
       - name: 🔨 Build Jupyter Book
         run: |
           echo "📚 Building with Jupyter Book..."
-          jupyter-book build . --path-output _build
+          jupyter-book build .
           echo "✅ Build completed!"
           ls -la _build/html/ || echo "No _build/html directory"
       
