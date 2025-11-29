@@ -30,7 +30,7 @@ subtitle: "Yujin Research Lab 소개"
 ## 🔗 Links
 
 - **GitHub**: [github.com/yujin](https://github.com/yujin)
-- **Email**: yujin@example.com
+- **Email**: cpaycdi@gmail.com
 
 ---
 
