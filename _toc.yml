@@ -20,6 +20,21 @@ parts:
       - file: courses/bci-basics/week7/day2-reinforcement-learning
       - file: courses/bci-basics/week8/day1-bci-systems
       - file: courses/bci-basics/week8/day2-future-directions
+  - caption: "🗺️ 지식 그래프"
+    chapters:
+      - file: concepts/index
+      - file: concepts/neuron
+      - file: concepts/action-potential
+      - file: concepts/synapse
+      - file: concepts/spike-train
+      - file: concepts/tuning-curve
+      - file: concepts/bayesian-decoding
+      - file: concepts/entropy
+      - file: concepts/mutual-information
+      - file: concepts/hodgkin-huxley
+      - file: concepts/stdp
+      - file: concepts/eeg
+      - file: concepts/bci-decoder
   - caption: "📚 자료실"
     chapters:
       - file: resources/datasets
