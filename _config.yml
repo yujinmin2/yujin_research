@@ -2,6 +2,11 @@ title: "Yujin Research Lab"
 author: "Yujin"
 logo: ""
 
+exclude_patterns:
+  - venv/**
+  - _build/**
+  - .git/**
+
 execute:
   execute_notebooks: 'off'
 
@@ -13,7 +18,31 @@ html:
   use_repository_button: true
   use_issues_button: true
   baseurl: /yujin_research/
+  extra_footer: |
+    <script src="https://giscus.app/client.js"
+        data-repo="yujinmin2/yujin_research"
+        data-repo-id="R_kgDOQcUPmQ"
+        data-category="General"
+        data-category-id="DIC_kwDOQcUPmc4CzL3b"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="ko"
+        crossorigin="anonymous"
+        async>
+    </script>
+
+launch_buttons:
+  notebook_interface: "jupyterlab"
+  binderhub_url: "https://mybinder.org"
+  colab_url: "https://colab.research.google.com"
+  thebe: false
 
 sphinx:
   config:
     html_baseurl: https://yujinmin2.github.io/yujin_research/
+  extra_extensions:
+    - sphinxcontrib.mermaid
